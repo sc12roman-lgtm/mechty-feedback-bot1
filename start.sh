@@ -1,1 +1,2 @@
-# mechty-feedback-bot1
+#!/bin/bash
+python3 bot.ру
