@@ -1,2 +1,2 @@
 #!/bin/bash
-python bot.ру
+python3 bot.ру
