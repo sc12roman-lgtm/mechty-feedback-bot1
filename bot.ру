@@ -4,7 +4,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from datetime import datetime
 
-BOT_TOKEN = 8425920773:AAGxPOj9eez6LPtqJBjtwcMdW5jaVrLV9XQ
+BOT_TOKEN = "8425920773:AAGxPOj9eez6LPtqJBjtwcMdW5jaVrLV9XQ"
 
 ADMINS = [
     1066954190,
