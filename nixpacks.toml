@@ -1,11 +1,11 @@
 [variables]
-    NIXPACKS_PYTHON_VERSION = "3.10"
+NIXPACKS_PYTHON_VERSION = "3.10"
 
 [phases.setup]
-    nixPkgs = ["python310", "gcc"]
+nixPkgs = ["python310"]
 
 [phases.install]
-    cmds = ["python -m venv /opt/venv && /opt/venv/bin/pip install --upgrade pip && /opt/venv/bin/pip install aiogram==2.25.1"]
+cmds = ["python -m venv /opt/venv && /opt/venv/bin/pip install -r requirements.txt"]
 
 [start]
-    cmd = "/opt/venv/bin/python bot.py"
+cmd = "/opt/venv/bin/python bot.py"
