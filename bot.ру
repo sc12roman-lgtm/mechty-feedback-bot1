@@ -88,5 +88,5 @@ async def improve(message: types.Message, state: FSMContext):
     )
     await state.finish()
 
-if name == "main":
+if__name__== "__main__":
     executor.start_polling(dp)
