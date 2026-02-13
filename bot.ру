@@ -63,9 +63,8 @@ async def like(message: types.Message, state: FSMContext):
 async def improve(message: types.Message, state: FSMContext):
     data = await state.get_data()
 
-rating_digits = "".join(filter(str.isdigit, data["rating"]))
-rating = int(rating_digits) if rating_digits else 0
-
+    rating_digits = "".join(filter(str.isdigit, data["rating"]))
+    rating = int(rating_digits) if rating_digits else 0
     kitchen = data["kitchen"]
     service = data["service"]
 
@@ -83,13 +82,12 @@ rating = int(rating_digits) if rating_digits else 0
 {message.text}
 """
         for admin in ADMINS:
-            await bot.send_message(admin, text)
+            try:
+                await bot.send_message(admin, text)
+            except Exception:
+                pass
 
     await message.answer(
         "Спасибо 🙏\nМы внимательно относимся к каждому отзыву.\nБудем рады видеть вас снова в «Мечтах»."
     )
     await state.finish()
-
-if __name__ == "__main__":
-
-    executor.start_polling(dp, skip_updates=True)
