@@ -1,11 +1,1 @@
-[variables]
-NIXPACKS_PYTHON_VERSION = "3.10"
 
-[phases.setup]
-nixPkgs = ["python310"]
-
-[phases.install]
-cmds = ["python -m venv /opt/venv && /opt/venv/bin/pip install -r requirements.txt"]
-
-[start]
-cmd = "/opt/venv/bin/python bot.py"
