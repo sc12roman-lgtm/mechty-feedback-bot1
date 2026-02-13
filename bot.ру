@@ -63,7 +63,9 @@ async def like(message: types.Message, state: FSMContext):
 async def improve(message: types.Message, state: FSMContext):
     data = await state.get_data()
 
-    rating = int(data["rating"][1])
+rating_digits = "".join(filter(str.isdigit, data["rating"]))
+rating = int(rating_digits) if rating_digits else 0
+
     kitchen = data["kitchen"]
     service = data["service"]
 
