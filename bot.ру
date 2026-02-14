@@ -9,13 +9,10 @@ logging.basicConfig(level=logging.INFO)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-ADMINS = [
-    1066954190,
-    931929515
-]
+ADMINS = [1066954190, 931929515]
 
 if not BOT_TOKEN:
-    exit("ОШИБКА: Переменная BOT_TOKEN не установлена в настройках Railway!")
+    exit("ОШИБКА: Переменная BOT_TOKEN не найдена в настройках Railway!")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -30,7 +27,7 @@ class Feedback(StatesGroup):
 
 @dp.message_handler(commands="start", state="*")
 async def start(message: types.Message, state: FSMContext):
-    await state.finish()  # Сбрасываем старые данные при перезапуске
+    await state.finish()
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
     kb.add("⭐️1","⭐️2","⭐️3","⭐️4","⭐️5")
     await message.answer(
@@ -58,44 +55,49 @@ async def kitchen(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Feedback.service)
 async def service(message: types.Message, state: FSMContext):
     await state.update_data(service=message.text)
-    await message.answer("Что особенно понравилось?", reply_markup=types.ReplyKeyboardRemove())
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add("Пропустить ➡️")
+    await message.answer("Что особенно понравилось?", reply_markup=kb)
     await Feedback.like.set()
 
 @dp.message_handler(state=Feedback.like)
 async def like(message: types.Message, state: FSMContext):
-    await state.update_data(like=message.text)
-    await message.answer("Что, на ваш взгляд, можно улучшить?")
+    val = message.text if message.text != "Пропустить ➡️" else "-"
+    await state.update_data(like=val)
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    kb.add("Пропустить и завершить ✅")
+    await message.answer("Что, на ваш взгляд, можно улучшить?", reply_markup=kb)
     await Feedback.improve.set()
 
 @dp.message_handler(state=Feedback.improve)
 async def improve(message: types.Message, state: FSMContext):
     data = await state.get_data()
+    improve_text = message.text if message.text != "Пропустить и завершить ✅" else "-"
     
-    rating_digits = "".join(filter(str.isdigit, data["rating"]))
-    rating_val = int(rating_digits) if rating_digits else 0
-    kitchen_val = data["kitchen"]
-    service_val = data["service"]
+    username = f"@{message.from_user.username}" if message.from_user.username else "Скрыт или не задан"
 
-    if rating_val <= 3 or kitchen_val == "Ожидал большего" or service_val == "Есть над чем поработать":
-        text = (
-            f"⚠️ Обратная связь «Мечты»\n\n"
-            f"Оценка: {data['rating']}\n"
-            f"Кухня: {kitchen_val}\n"
-            f"Сервис: {service_val}\n\n"
-            f"Понравилось:\n{data['like']}\n\n"
-            f"Что улучшить:\n{message.text}"
-        )
-        for admin in ADMINS:
-            try:
-                await bot.send_message(admin, text)
-            except Exception as e:
-                logging.error(f"Не удалось отправить сообщение админу {admin}: {e}")
+    text = (
+        f"🌿 Новый отзыв «Мечты»\n\n"
+        f"👤 Гость: {username}\n\n"
+        f"Оценка: {data.get('rating', '-')}\n"
+        f"Кухня: {data.get('kitchen', '-')}\n"
+        f"Сервис: {data.get('service', '-')}\n\n"
+        f"Понравилось:\n{data.get('like', '-')}\n\n"
+        f"Что улучшить:\n{improve_text}"
+    )
+
+    for admin in ADMINS:
+        try:
+            await bot.send_message(admin, text, parse_mode="Markdown")
+        except Exception as e:
+            logging.error(f"Ошибка отправки админу {admin}: {e}")
 
     await message.answer(
-        "Спасибо 🙏\nМы внимательно относимся к каждому отзыву.\nБудем рады видеть вас снова в «Мечтах»."
+        "Спасибо 🙏\nМы внимательно относимся к каждому отзыву.\nБудем рады видеть вас снова в «Мечтах».",
+        reply_markup=types.ReplyKeyboardRemove()
     )
     await state.finish()
 
 if __name__ == '__main__':
-    print("Бот успешно запущен на Railway!")
+    print("Бот запущен...")
     executor.start_polling(dp, skip_updates=True)
