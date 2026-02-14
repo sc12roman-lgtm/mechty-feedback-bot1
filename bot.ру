@@ -91,3 +91,5 @@ async def improve(message: types.Message, state: FSMContext):
         "Спасибо 🙏\nМы внимательно относимся к каждому отзыву.\nБудем рады видеть вас снова в «Мечтах»."
     )
     await state.finish()
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True)
