@@ -1,9 +1,11 @@
 import os
+import logging
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from datetime import datetime
+
+logging.basicConfig(level=logging.INFO)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -13,8 +15,7 @@ ADMINS = [
 ]
 
 if not BOT_TOKEN:
-    print("ОШИБКА: Токен не найден в переменных окружения (Variables)!")
-    exit()
+    exit("ОШИБКА: Переменная BOT_TOKEN не установлена в настройках Railway!")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -26,8 +27,10 @@ class Feedback(StatesGroup):
     like = State()
     improve = State()
 
-@dp.message_handler(commands="start")
-async def start(message: types.Message):
+
+@dp.message_handler(commands="start", state="*")
+async def start(message: types.Message, state: FSMContext):
+    await state.finish()  # Сбрасываем старые данные при перезапуске
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
     kb.add("⭐️1","⭐️2","⭐️3","⭐️4","⭐️5")
     await message.answer(
@@ -67,35 +70,32 @@ async def like(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Feedback.improve)
 async def improve(message: types.Message, state: FSMContext):
     data = await state.get_data()
-
+    
     rating_digits = "".join(filter(str.isdigit, data["rating"]))
-    rating = int(rating_digits) if rating_digits else 0
-    kitchen = data["kitchen"]
-    service = data["service"]
+    rating_val = int(rating_digits) if rating_digits else 0
+    kitchen_val = data["kitchen"]
+    service_val = data["service"]
 
-    if rating <= 3 or kitchen == "Ожидал большего" or service == "Есть над чем поработать":
-        text = f"""⚠️ Обратная связь «Мечты»
-
-Оценка: {data['rating']}
-Кухня: {kitchen}
-Сервис: {service}
-
-Понравилось:
-{data['like']}
-
-Что улучшить:
-{message.text}
-"""
+    if rating_val <= 3 or kitchen_val == "Ожидал большего" or service_val == "Есть над чем поработать":
+        text = (
+            f"⚠️ Обратная связь «Мечты»\n\n"
+            f"Оценка: {data['rating']}\n"
+            f"Кухня: {kitchen_val}\n"
+            f"Сервис: {service_val}\n\n"
+            f"Понравилось:\n{data['like']}\n\n"
+            f"Что улучшить:\n{message.text}"
+        )
         for admin in ADMINS:
             try:
                 await bot.send_message(admin, text)
-            except Exception:
-                pass
+            except Exception as e:
+                logging.error(f"Не удалось отправить сообщение админу {admin}: {e}")
 
     await message.answer(
         "Спасибо 🙏\nМы внимательно относимся к каждому отзыву.\nБудем рады видеть вас снова в «Мечтах»."
     )
     await state.finish()
+
 if name == 'main':
-    print("Бот запущен...")
+    print("Бот успешно запущен на Railway!")
     executor.start_polling(dp, skip_updates=True)
