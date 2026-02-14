@@ -1,15 +1,20 @@
+import os
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from datetime import datetime
 
-BOT_TOKEN = "8425920773:AAGxPOj9eez6LPtqJBjtwcMdW5jaVrLV9XQ"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 ADMINS = [
     1066954190,
     931929515
 ]
+
+if not BOT_TOKEN:
+    print("ОШИБКА: Токен не найден в переменных окружения (Variables)!")
+    exit()
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -91,5 +96,6 @@ async def improve(message: types.Message, state: FSMContext):
         "Спасибо 🙏\nМы внимательно относимся к каждому отзыву.\nБудем рады видеть вас снова в «Мечтах»."
     )
     await state.finish()
-if __name__ == '__main__':
+if name == 'main':
+    print("Бот запущен...")
     executor.start_polling(dp, skip_updates=True)
